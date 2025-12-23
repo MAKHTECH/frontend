@@ -1,0 +1,170 @@
+.about {
+  padding: 6rem 2rem;
+}
+
+.about-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+}
+
+.class-keyword {
+  color: var(--primary);
+}
+
+.class-name {
+  color: var(--code-yellow);
+}
+
+.bracket {
+  color: var(--text-secondary);
+}
+
+/* Code Block Style */
+.about-text {
+  margin-top: 2rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 0, 255, 0.1);
+  padding: 1.5rem;
+}
+
+.code-block {
+  display: flex;
+  gap: 1.5rem;
+  padding: 0.25rem 0;
+  font-size: 0.85rem;
+}
+
+.code-block.indent {
+  padding-left: 1.5rem;
+}
+
+.code-block.indent-2 {
+  padding-left: 3rem;
+}
+
+.line-num {
+  color: var(--text-secondary);
+  opacity: 0.3;
+  user-select: none;
+  min-width: 1.5rem;
+}
+
+.code-line {
+  color: var(--text-primary);
+}
+
+.method {
+  color: var(--code-yellow);
+}
+
+.this {
+  color: var(--primary);
+}
+
+.string {
+  color: var(--code-green);
+}
+
+.number {
+  color: var(--code-orange);
+}
+
+.about-footer {
+  margin-top: 2rem;
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+}
+
+/* Timeline */
+.about-timeline {
+  padding-left: 2rem;
+  border-left: 1px solid rgba(255, 0, 255, 0.2);
+}
+
+.timeline-header {
+  margin-bottom: 2rem;
+}
+
+.comment {
+  color: var(--text-secondary);
+  opacity: 0.5;
+  font-size: 0.8rem;
+}
+
+.timeline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.timeline-item {
+  display: flex;
+  gap: 1.5rem;
+  position: relative;
+}
+
+.timeline-marker {
+  width: 8px;
+  height: 8px;
+  background: var(--primary);
+  position: absolute;
+  left: -2.35rem;
+  top: 0.25rem;
+}
+
+.timeline-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.timeline-year {
+  font-size: 0.75rem;
+  color: var(--primary);
+}
+
+.timeline-event {
+  font-size: 1rem;
+  color: var(--code-yellow);
+}
+
+.timeline-desc {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .about-grid {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+
+  .about-timeline {
+    padding-left: 2.5rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .about {
+    padding: 4rem 1.5rem;
+  }
+
+  .code-block {
+    font-size: 0.75rem;
+  }
+
+  .code-block.indent {
+    padding-left: 1rem;
+  }
+
+  .code-block.indent-2 {
+    padding-left: 2rem;
+  }
+}
