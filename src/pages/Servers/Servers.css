@@ -1,0 +1,132 @@
+.page-servers {
+  padding: 2rem;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+}
+
+.page-comment {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 400;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.const-keyword {
+  color: var(--primary);
+}
+
+.var-name {
+  color: var(--code-blue);
+}
+
+.operator {
+  color: var(--text-secondary);
+}
+
+.method {
+  color: var(--code-green);
+}
+
+.brackets {
+  color: var(--text-secondary);
+}
+
+/* Servers Grid */
+.servers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.server-card {
+  background: var(--surface);
+  border: 1px solid rgba(255, 0, 255, 0.1);
+  padding: 1.5rem;
+  transition: all 0.2s ease;
+}
+
+.server-card:hover {
+  border-color: rgba(255, 0, 255, 0.3);
+}
+
+.server-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.server-name {
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.server-status {
+  font-size: 0.75rem;
+  color: #4ADE80;
+}
+
+.server-specs {
+  margin-bottom: 1.5rem;
+}
+
+.spec-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px dashed rgba(255, 0, 255, 0.1);
+}
+
+.spec-row:last-child {
+  border-bottom: none;
+}
+
+.spec-label {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.spec-value {
+  color: var(--code-green);
+  font-size: 0.85rem;
+}
+
+.server-price {
+  margin-bottom: 1rem;
+}
+
+.price-value {
+  font-size: 1.5rem;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.price-period {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.btn-order {
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--primary);
+  border: none;
+  color: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-order:hover {
+  background: var(--primary-dark);
+  box-shadow: 0 0 20px rgba(255, 0, 255, 0.3);
+}

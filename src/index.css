@@ -102,6 +102,7 @@ button {
 button:hover {
   background: var(--primary);
   color: var(--background);
+  box-shadow: var(--gradient-glow);
 }
 
 /* Scrollbar */
