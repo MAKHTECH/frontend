@@ -8,6 +8,25 @@
   margin: 0 auto;
 }
 
+/* Section Header */
+.section-header {
+  margin-bottom: 0;
+  min-height: 60px;
+}
+
+.section-comment {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 400;
+  font-family: 'JetBrains Mono', monospace;
+}
+
 .await-keyword {
   color: var(--primary);
 }
@@ -24,6 +43,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4rem;
+  align-items: start;
 }
 
 /* Contact Methods */
@@ -32,6 +52,11 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.support-contact {
+  display: flex;
+  flex-direction: column;
 }
 
 .contact-item {
@@ -92,6 +117,8 @@
 .support-faq {
   padding-left: 2rem;
   border-left: 1px solid rgba(255, 0, 255, 0.1);
+  display: flex;
+  flex-direction: column;
 }
 
 .faq-header {
@@ -101,6 +128,7 @@
   color: var(--text-secondary);
   opacity: 0.5;
   margin-bottom: 1.5rem;
+  min-height: 60px;
 }
 
 .comment-multi {
@@ -192,6 +220,9 @@
   font-size: 0.85rem;
   font-weight: 600;
   white-space: nowrap;
+  border: none;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
   transition: all 0.2s ease;
 }
 

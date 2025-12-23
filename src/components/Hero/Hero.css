@@ -181,21 +181,25 @@
   display: inline-flex;
   align-items: center;
   background: var(--primary);
-  color: var(--background);
+  color: #0F0F1A;
   text-decoration: none;
   padding: 0.75rem 1.5rem;
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
   transition: all 0.2s ease;
 }
 
 .btn-primary-new:hover {
-  background: var(--secondary);
-  color: white;
+  background: #E000E0;
+  color: #ffffff;
+  box-shadow: 0 0 20px rgba(255, 0, 255, 0.4);
 }
 
 .btn-bracket {
-  opacity: 0.5;
+  opacity: 0.6;
   margin: 0 0.25rem;
 }
 
@@ -222,20 +226,23 @@
   gap: 2rem;
   padding-top: 1.5rem;
   border-top: 1px dashed rgba(255, 0, 255, 0.2);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
 }
 
 .stat-item {
   display: flex;
   gap: 0.5rem;
+  align-items: center;
 }
 
 .stat-key {
   color: var(--accent-purple);
+  font-size: 0.8rem;
 }
 
 .stat-value {
-  color: var(--code-green);
+  color: #4ADE80 !important;
+  font-size: 1.0rem;
 }
 
 /* Scroll Hint */

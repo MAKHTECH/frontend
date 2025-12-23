@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import './Header.css';
 
-function Header() {
+function Header({ onAuthClick }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -26,8 +26,8 @@ function Header() {
         </nav>
 
         <div className="header-actions">
-          <a href="#login" className="btn-login">Войти</a>
-          <a href="#register" className="btn-register">Начать</a>
+          <button onClick={onAuthClick} className="btn-login">Войти</button>
+          <button onClick={onAuthClick} className="btn-register">Начать</button>
         </div>
 
         <button 

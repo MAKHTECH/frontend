@@ -1,6 +1,6 @@
 import './Pricing.css';
 
-function Pricing() {
+function Pricing({ onAuthClick }) {
   const plans = [
     {
       name: 'starter',
@@ -73,7 +73,10 @@ function Pricing() {
                 </div>
               </div>
 
-              <button className={`pricing-btn mono ${plan.highlight ? 'pricing-btn-primary' : ''}`}>
+              <button 
+                className={`pricing-btn mono ${plan.highlight ? 'pricing-btn-primary' : ''}`}
+                onClick={onAuthClick}
+              >
                 server.create()
               </button>
             </div>

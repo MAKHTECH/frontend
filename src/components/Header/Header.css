@@ -88,10 +88,13 @@
 }
 
 .btn-login {
+  font-family: 'JetBrains Mono', monospace;
+  background: transparent;
+  border: none;
   color: var(--text-secondary);
-  text-decoration: none;
   font-size: 0.8rem;
   padding: 0.4rem 0.75rem;
+  cursor: pointer;
   transition: color 0.2s ease;
 }
 
@@ -103,11 +106,11 @@
   font-family: 'JetBrains Mono', monospace;
   background: transparent;
   color: var(--primary);
-  text-decoration: none;
   padding: 0.4rem 1rem;
   font-size: 0.8rem;
   font-weight: 500;
   border: 1px solid var(--primary);
+  cursor: pointer;
   transition: all 0.2s ease;
 }
 

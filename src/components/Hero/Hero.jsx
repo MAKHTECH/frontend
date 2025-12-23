@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import './Hero.css';
 
-function Hero() {
+function Hero({ onAuthClick }) {
   const [typedText, setTypedText] = useState('');
   const fullText = 'orbita.deploy({ server: "vps", location: "eu" });';
   
@@ -66,11 +66,11 @@ function Hero() {
           </p>
           
           <div className="hero-actions">
-            <a href="#pricing" className="btn-primary-new mono">
+            <button onClick={onAuthClick} className="btn-primary-new mono">
               <span className="btn-bracket">[</span>
               Начать
               <span className="btn-bracket">]</span>
-            </a>
+            </button>
             <a href="#features" className="btn-secondary-new mono">
               README.md
             </a>

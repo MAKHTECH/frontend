@@ -1,6 +1,6 @@
 import './Support.css';
 
-function Support() {
+function Support({ onAuthClick }) {
   const faq = [
     {
       q: 'Сколько времени занимает развёртывание?',
@@ -90,9 +90,9 @@ function Support() {
             <span className="cta-prompt">$</span>
             <span className="cta-command">curl -X POST https://orbita.cloud/api/v1/servers</span>
           </div>
-          <a href="#pricing" className="cta-button mono">
+          <button onClick={onAuthClick} className="cta-button mono">
             Создать сервер →
-          </a>
+          </button>
         </div>
       </div>
 
