@@ -1,6 +1,6 @@
 .page-profile {
   padding: 2rem;
-  max-width: 900px;
+  max-width: 1200px;
 }
 
 .page-header {
@@ -42,6 +42,19 @@
 
 /* Profile Layout */
 .profile-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Profile Grid - Two Column Layout */
+.profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.profile-column {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -392,6 +405,12 @@
 }
 
 /* Responsive */
+@media (max-width: 992px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 768px) {
   .page-profile {
     padding: 1.5rem;
