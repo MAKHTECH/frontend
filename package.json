@@ -7,9 +7,13 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "proto:gen": "protoc -I=proto proto/auth.proto --js_out=import_style=commonjs,binary:src/generated --grpc-web_out=import_style=commonjs,mode=grpcwebtext:src/generated"
   },
   "dependencies": {
+    "google-protobuf": "^4.0.1",
+    "grpc-web": "^2.0.2",
+    "protobufjs": "^8.0.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.11.0"
@@ -23,6 +27,9 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
+    "grpc-tools": "^1.13.1",
+    "protoc-gen-grpc-web": "^1.5.0",
+    "protoc-gen-js": "^3.21.4-4",
     "vite": "^7.2.4"
   }
 }
