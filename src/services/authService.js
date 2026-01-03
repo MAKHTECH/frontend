@@ -1,6 +1,79 @@
 import GRPC_CONFIG from '../config/grpc.config.js';
 import protobuf from 'protobufjs';
 
+/**
+ * Декодирование PASETO v2.public токена (без верификации подписи)
+ * @param {string} token - PASETO токен
+ * @returns {Object|null} - Payload токена или null при ошибке
+ */
+function decodePasetoPayload(token) {
+  try {
+    if (!token || typeof token !== 'string') {
+      console.error('Invalid token: token is empty or not a string');
+      return null;
+    }
+
+    const parts = token.split('.');
+    
+    if (parts.length < 3 || parts[0] !== 'v2' || parts[1] !== 'public') {
+      console.error('Invalid PASETO v2.public token format');
+      return null;
+    }
+    
+    // Payload в base64url (без padding)
+    const payloadBase64 = parts[2];
+    
+    // Декодируем base64url -> binary
+    const base64 = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
+    const binary = atob(base64);
+    
+    // Payload = всё кроме последних 64 байт (подпись Ed25519)
+    const payloadStr = binary.slice(0, binary.length - 64);
+    
+    const payload = JSON.parse(payloadStr);
+    console.log('Decoded PASETO payload:', payload);
+    return payload;
+  } catch (error) {
+    console.error('Error decoding PASETO token:', error);
+    return null;
+  }
+}
+
+/**
+ * Проверка истечения срока действия токена
+ * @param {string} token - PASETO токен
+ * @returns {boolean} - true если токен истёк
+ */
+function isTokenExpired(token) {
+  const payload = decodePasetoPayload(token);
+  if (!payload || !payload.exp) {
+    return true; // Считаем истёкшим если не удалось распарсить
+  }
+  const expDate = new Date(payload.exp);
+  return expDate < new Date();
+}
+
+/**
+ * Проверка нужно ли обновить токен (истекает в ближайшее время)
+ * @param {string} token - PASETO токен
+ * @param {number} bufferSeconds - Запас времени в секундах до истечения (по умолчанию 60 сек)
+ * @returns {boolean} - true если токен нужно обновить
+ */
+function shouldRefreshToken(token, bufferSeconds = 60) {
+  const payload = decodePasetoPayload(token);
+  if (!payload || !payload.exp) {
+    return true; // Нужно обновить если не удалось распарсить
+  }
+  const expDate = new Date(payload.exp);
+  const bufferMs = bufferSeconds * 1000;
+  // Обновляем если до истечения осталось меньше bufferSeconds
+  return expDate.getTime() - Date.now() < bufferMs;
+}
+
+// Константы для хранения токенов
+const TOKEN_STORAGE_KEY = 'accessToken';
+const REFRESH_TOKEN_STORAGE_KEY = 'refreshToken';
+
 // Определяем proto схему напрямую в коде
 const protoSchema = {
   nested: {
@@ -92,6 +165,80 @@ const root = protobuf.Root.fromJSON(protoSchema);
 class AuthService {
   constructor() {
     this.serviceUrl = GRPC_CONFIG.serverUrl;
+    this.refreshPromise = null; // Для предотвращения параллельных refresh запросов
+    this.refreshTimer = null; // Таймер для автоматического обновления
+    
+    // Запускаем автоматическое обновление токена при инициализации
+    this.scheduleTokenRefresh();
+  }
+
+  /**
+   * Сохранение токенов в localStorage
+   * @param {string} accessToken - Access токен
+   * @param {string} refreshToken - Refresh токен
+   */
+  saveTokens(accessToken, refreshToken) {
+    if (accessToken) {
+      localStorage.setItem(TOKEN_STORAGE_KEY, accessToken);
+      // Декодируем и выводим payload токена
+      const payload = decodePasetoPayload(accessToken);
+      console.log('Token saved - Payload:', payload);
+      // Планируем обновление токена
+      this.scheduleTokenRefresh();
+    }
+    if (refreshToken) {
+      localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, refreshToken);
+    }
+  }
+
+  /**
+   * Удаление токенов из localStorage
+   */
+  clearTokens() {
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
+    if (this.refreshTimer) {
+      clearTimeout(this.refreshTimer);
+      this.refreshTimer = null;
+    }
+  }
+
+  /**
+   * Планирование автоматического обновления токена
+   */
+  scheduleTokenRefresh() {
+    // Очищаем предыдущий таймер
+    if (this.refreshTimer) {
+      clearTimeout(this.refreshTimer);
+      this.refreshTimer = null;
+    }
+
+    const token = this.getAccessToken();
+    if (!token) return;
+
+    const payload = decodePasetoPayload(token);
+    if (!payload || !payload.exp) return;
+
+    const expDate = new Date(payload.exp);
+    const now = Date.now();
+    // Обновляем за 60 секунд до истечения
+    const refreshTime = expDate.getTime() - now - 60000;
+
+    if (refreshTime > 0) {
+      console.log(`Token refresh scheduled in ${Math.round(refreshTime / 1000)} seconds`);
+      this.refreshTimer = setTimeout(async () => {
+        try {
+          console.log('Auto-refreshing token...');
+          await this.refreshToken();
+        } catch (error) {
+          console.error('Auto-refresh failed:', error);
+        }
+      }, refreshTime);
+    } else if (!isTokenExpired(token)) {
+      // Токен ещё действителен, но скоро истечёт - обновляем сразу
+      console.log('Token expiring soon, refreshing now...');
+      this.refreshToken().catch(err => console.error('Immediate refresh failed:', err));
+    }
   }
 
   /**
@@ -119,13 +266,8 @@ class AuthService {
       );
       
       if (response.tokens) {
-        // Сохраняем токены в localStorage
-        if (response.tokens.accessToken) {
-          localStorage.setItem('accessToken', response.tokens.accessToken);
-        }
-        if (response.tokens.refreshToken) {
-          localStorage.setItem('refreshToken', response.tokens.refreshToken);
-        }
+        // Сохраняем токены
+        this.saveTokens(response.tokens.accessToken, response.tokens.refreshToken);
         return { success: true, tokens: response.tokens };
       } else {
         throw new Error('Ошибка регистрации: токены не получены');
@@ -158,13 +300,8 @@ class AuthService {
       );
       
       if (response.tokens) {
-        // Сохраняем токены в localStorage
-        if (response.tokens.accessToken) {
-          localStorage.setItem('accessToken', response.tokens.accessToken);
-        }
-        if (response.tokens.refreshToken) {
-          localStorage.setItem('refreshToken', response.tokens.refreshToken);
-        }
+        // Сохраняем токены
+        this.saveTokens(response.tokens.accessToken, response.tokens.refreshToken);
         return { success: true, tokens: response.tokens };
       } else {
         throw new Error('Ошибка входа: токены не получены');
@@ -194,9 +331,8 @@ class AuthService {
     } catch (error) {
       // Ошибка при logout не критична
     } finally {
-      // Удаляем токены из localStorage
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
+      // Удаляем токены
+      this.clearTokens();
     }
   }
 
@@ -205,12 +341,32 @@ class AuthService {
    * @returns {Promise<Object>} - Новая пара токенов
    */
   async refreshToken() {
+    // Защита от параллельных запросов на обновление
+    if (this.refreshPromise) {
+      return this.refreshPromise;
+    }
+
+    this.refreshPromise = this._doRefreshToken();
+    
+    try {
+      return await this.refreshPromise;
+    } finally {
+      this.refreshPromise = null;
+    }
+  }
+
+  /**
+   * Внутренний метод обновления токена
+   * @private
+   */
+  async _doRefreshToken() {
     try {
       const refreshToken = this.getRefreshToken();
       if (!refreshToken) {
         throw new Error('Refresh token не найден');
       }
 
+      console.log('Refreshing token...');
       const requestData = {
         refresh_token: refreshToken
       };
@@ -223,20 +379,17 @@ class AuthService {
       );
       
       if (response.tokens) {
-        // Обновляем токены в localStorage
-        if (response.tokens.accessToken) {
-          localStorage.setItem('accessToken', response.tokens.accessToken);
-        }
-        if (response.tokens.refreshToken) {
-          localStorage.setItem('refreshToken', response.tokens.refreshToken);
-        }
+        // Сохраняем токены
+        this.saveTokens(response.tokens.accessToken, response.tokens.refreshToken);
+        console.log('Token refreshed successfully');
         return { success: true, tokens: response.tokens };
       } else {
         throw new Error('Ошибка обновления токена');
       }
     } catch (error) {
+      console.error('Token refresh failed:', error);
       // При ошибке удаляем токены
-      this.logout();
+      this.clearTokens();
       throw error;
     }
   }
@@ -269,7 +422,7 @@ class AuthService {
    * @returns {string|null} - Access токен
    */
   getAccessToken() {
-    return localStorage.getItem('accessToken');
+    return localStorage.getItem(TOKEN_STORAGE_KEY);
   }
 
   /**
@@ -277,7 +430,32 @@ class AuthService {
    * @returns {string|null} - Refresh токен
    */
   getRefreshToken() {
-    return localStorage.getItem('refreshToken');
+    return localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
+  }
+
+  /**
+   * Получение валидного access токена (с автоматическим обновлением если нужно)
+   * @returns {Promise<string|null>} - Валидный access токен или null
+   */
+  async getValidAccessToken() {
+    const token = this.getAccessToken();
+    
+    if (!token) {
+      return null;
+    }
+
+    // Проверяем нужно ли обновить токен
+    if (shouldRefreshToken(token)) {
+      try {
+        await this.refreshToken();
+        return this.getAccessToken();
+      } catch (error) {
+        console.error('Failed to refresh token:', error);
+        return null;
+      }
+    }
+
+    return token;
   }
 
   /**
@@ -286,6 +464,26 @@ class AuthService {
    */
   getToken() {
     return this.getAccessToken();
+  }
+
+  /**
+   * Получение payload из текущего access токена
+   * @returns {Object|null} - Payload токена или null
+   */
+  getTokenPayload() {
+    const token = this.getAccessToken();
+    if (!token) return null;
+    return decodePasetoPayload(token);
+  }
+
+  /**
+   * Проверка истёк ли текущий access токен
+   * @returns {boolean} - true если токен истёк или отсутствует
+   */
+  isAccessTokenExpired() {
+    const token = this.getAccessToken();
+    if (!token) return true;
+    return isTokenExpired(token);
   }
 
   /**
@@ -433,4 +631,5 @@ class AuthService {
 // Экспортируем singleton instance
 const authService = new AuthService();
 export default authService;
+export { decodePasetoPayload, isTokenExpired, shouldRefreshToken };
 
