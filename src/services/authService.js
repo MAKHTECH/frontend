@@ -131,7 +131,6 @@ class AuthService {
         throw new Error('Ошибка регистрации: токены не получены');
       }
     } catch (error) {
-      console.error('Registration error:', error);
       throw error;
     }
   }
@@ -171,7 +170,6 @@ class AuthService {
         throw new Error('Ошибка входа: токены не получены');
       }
     } catch (error) {
-      console.error('Login error:', error);
       throw error;
     }
   }
@@ -194,7 +192,7 @@ class AuthService {
         );
       }
     } catch (error) {
-      console.error('Logout error:', error);
+      // Ошибка при logout не критична
     } finally {
       // Удаляем токены из localStorage
       localStorage.removeItem('accessToken');
@@ -237,7 +235,6 @@ class AuthService {
         throw new Error('Ошибка обновления токена');
       }
     } catch (error) {
-      console.error('Refresh token error:', error);
       // При ошибке удаляем токены
       this.logout();
       throw error;
@@ -263,7 +260,6 @@ class AuthService {
       );
       return response.devices || [];
     } catch (error) {
-      console.error('Get devices error:', error);
       throw error;
     }
   }
@@ -339,6 +335,20 @@ class AuthService {
         mode: 'cors'
       });
 
+      // Сначала проверяем grpc-status в HTTP заголовках (Envoy/gRPC-Web часто передаёт ошибки там)
+      const grpcStatusHeader = response.headers.get('grpc-status');
+      const grpcMessageHeader = response.headers.get('grpc-message');
+      
+      if (grpcStatusHeader && grpcStatusHeader !== '0') {
+        let errorMessage = grpcMessageHeader || 'Ошибка сервера';
+        try {
+          errorMessage = decodeURIComponent(errorMessage.replace(/\+/g, ' '));
+        } catch (e) {
+          // Если не удалось декодировать, используем как есть
+        }
+        throw new Error(errorMessage);
+      }
+
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
@@ -351,25 +361,61 @@ class AuthService {
       // Читаем все фреймы gRPC-Web
       let offset = 0;
       let messageData = null;
+      let trailers = {};
       
       while (offset < responseData.length) {
-        // Читаем заголовок фрейма (5 байт)
-        const compressionFlag = responseData[offset];
-        const messageLength = new DataView(responseData.buffer, offset + 1, 4).getUint32(0, false);
+        // Проверяем, есть ли достаточно байт для заголовка
+        if (offset + 5 > responseData.length) break;
         
-        // Проверяем тип фрейма
-        if (compressionFlag === 0) {
+        // Читаем заголовок фрейма (5 байт)
+        const frameType = responseData[offset];
+        const messageLength = new DataView(responseData.buffer, responseData.byteOffset + offset + 1, 4).getUint32(0, false);
+        
+        // Проверяем, есть ли достаточно байт для сообщения
+        if (offset + 5 + messageLength > responseData.length) break;
+        
+        // Проверяем тип фрейма (bit 7 указывает на trailers)
+        const isTrailers = (frameType & 0x80) !== 0;
+        
+        if (!isTrailers) {
           // Data frame - это наше сообщение
           messageData = responseData.slice(offset + 5, offset + 5 + messageLength);
-          break; // Берем только первое data сообщение
+        } else {
+          // Trailers frame - парсим для извлечения grpc-status и grpc-message
+          const trailersData = responseData.slice(offset + 5, offset + 5 + messageLength);
+          const trailersText = new TextDecoder().decode(trailersData);
+          
+          // Парсим trailers (формат: key: value, разделитель может быть \r\n или \n)
+          const lines = trailersText.split(/\r?\n/);
+          lines.forEach(line => {
+            const colonIndex = line.indexOf(':');
+            if (colonIndex > 0) {
+              const key = line.substring(0, colonIndex).trim().toLowerCase();
+              const value = line.substring(colonIndex + 1).trim();
+              trailers[key] = value;
+            }
+          });
         }
-        // Если compressionFlag === 0x80, это trailers - пропускаем
         
         offset += 5 + messageLength;
       }
       
+      // Проверяем статус gRPC из trailers
+      const grpcStatus = trailers['grpc-status'];
+      if (grpcStatus && grpcStatus !== '0') {
+        // gRPC вернул ошибку
+        let errorMessage = trailers['grpc-message'] || 'Ошибка сервера';
+        // Декодируем URL-encoded сообщение
+        try {
+          errorMessage = decodeURIComponent(errorMessage.replace(/\+/g, ' '));
+        } catch (e) {
+          // Если не удалось декодировать, используем как есть
+        }
+        throw new Error(errorMessage);
+      }
+      
       if (!messageData) {
-        throw new Error('No message data found in response');
+        throw new Error('Ответ от сервера не содержит данных');
       }
       
       const responseMessage = ResponseMessage.decode(messageData);
@@ -379,7 +425,6 @@ class AuthService {
         bytes: String,
       });
     } catch (error) {
-      console.error('gRPC request error:', error);
       throw new Error(error.message || 'Ошибка соединения с сервером');
     }
   }

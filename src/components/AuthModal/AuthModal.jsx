@@ -65,7 +65,6 @@ function AuthModal({ isOpen, onClose, onSuccess }) {
         }
       }
     } catch (error) {
-      console.error('Auth error:', error);
       setError(error.message || 'Произошла ошибка. Проверьте подключение к серверу.');
     } finally {
       setIsLoading(false);
