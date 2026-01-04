@@ -226,10 +226,15 @@
   transition: all 0.2s ease;
 }
 
-.btn-telegram:hover {
+.btn-telegram:hover:not(:disabled) {
   border-color: #0088cc;
   color: #0088cc;
   background: rgba(0, 136, 204, 0.05);
+}
+
+.btn-telegram:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .btn-telegram svg {

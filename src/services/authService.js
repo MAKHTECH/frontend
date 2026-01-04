@@ -1,4 +1,4 @@
-import GRPC_CONFIG from '../config/grpc.config.js';
+import GRPC_CONFIG, { API_CONFIG } from '../config/grpc.config.js';
 import protobuf from 'protobufjs';
 
 /**
@@ -309,6 +309,88 @@ class AuthService {
     } catch (error) {
       throw error;
     }
+  }
+
+  /**
+   * Вход через Telegram
+   * @param {Object} telegramData - Данные от Telegram OAuth
+   * @returns {Promise<Object>} - Результат входа с токенами
+   */
+  async loginWithTelegram(telegramData) {
+    try {
+      // Формируем URL с параметрами для бэкенда
+      const params = new URLSearchParams({
+        id: telegramData.id,
+        first_name: telegramData.first_name || '',
+        last_name: telegramData.last_name || '',
+        username: telegramData.username || '',
+        photo_url: telegramData.photo_url || '',
+        auth_date: telegramData.auth_date,
+        hash: telegramData.hash
+      });
+
+      const response = await fetch(`${API_CONFIG.telegramAuthUrl}/callback/telegram/auth?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'X-Fingerprint': this.getFingerprint(),
+        }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Ошибка авторизации через Telegram');
+      }
+
+      const tokenPair = await response.json();
+      
+      if (tokenPair.accessToken && tokenPair.refreshToken) {
+        // Сохраняем токены
+        this.saveTokens(tokenPair.accessToken, tokenPair.refreshToken);
+        return { 
+          success: true, 
+          tokens: {
+            accessToken: tokenPair.accessToken,
+            refreshToken: tokenPair.refreshToken
+          }
+        };
+      } else {
+        throw new Error('Токены не получены от сервера');
+      }
+    } catch (error) {
+      console.error('Telegram login error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Получение fingerprint браузера
+   * @returns {string} - Fingerprint
+   */
+  getFingerprint() {
+    // Простой fingerprint на основе данных браузера
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.textBaseline = 'top';
+    ctx.font = '14px Arial';
+    ctx.fillText('fingerprint', 2, 2);
+    const canvasData = canvas.toDataURL();
+    
+    const data = [
+      navigator.userAgent,
+      navigator.language,
+      screen.width + 'x' + screen.height,
+      new Date().getTimezoneOffset(),
+      canvasData.slice(-50)
+    ].join('|');
+    
+    // Простой хэш
+    let hash = 0;
+    for (let i = 0; i < data.length; i++) {
+      const char = data.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    return Math.abs(hash).toString(16);
   }
 
   /**

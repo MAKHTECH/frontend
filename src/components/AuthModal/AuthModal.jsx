@@ -81,8 +81,75 @@ function AuthModal({ isOpen, onClose, onSuccess }) {
   };
 
   const handleTelegramLogin = () => {
-    // В будущем здесь будет логика входа через Telegram
-    setError('Telegram авторизация в разработке');
+    setError('');
+    setIsLoading(true);
+    
+    // Telegram Bot username и callback URL
+    const botUsername = 'ENStealer_bot';
+    const callbackUrl = 'http://localhost:8099/callback/telegram/auth';
+    
+    // Генерируем уникальный ID для этой сессии авторизации
+    const authId = Date.now().toString();
+    
+    // Создаём URL для Telegram OAuth
+    const telegramAuthUrl = `https://oauth.telegram.org/auth?bot_id=6140124734&origin=${encodeURIComponent(window.location.origin)}&request_access=write&return_to=${encodeURIComponent(window.location.href)}`;
+    
+    // Открываем popup для авторизации Telegram
+    const width = 550;
+    const height = 470;
+    const left = (window.screen.width - width) / 2;
+    const top = (window.screen.height - height) / 2;
+    
+    const popup = window.open(
+      `https://oauth.telegram.org/auth?bot_id=6140124734&origin=${encodeURIComponent(window.location.origin)}&embed=1&request_access=write`,
+      'telegram-auth',
+      `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no`
+    );
+    
+    // Слушаем сообщения от Telegram
+    const handleMessage = async (event) => {
+      // Проверяем origin
+      if (event.origin !== 'https://oauth.telegram.org') return;
+      
+      try {
+        const data = JSON.parse(event.data);
+        
+        if (data.event === 'auth_result' && data.result) {
+          window.removeEventListener('message', handleMessage);
+          if (popup && !popup.closed) popup.close();
+          
+          // Отправляем данные на бэкенд
+          const telegramData = data.result;
+          const response = await authService.loginWithTelegram(telegramData);
+          
+          if (response.success && response.tokens) {
+            onSuccess({ tokens: response.tokens });
+          } else {
+            setError('Ошибка авторизации через Telegram');
+          }
+          setIsLoading(false);
+        }
+      } catch (e) {
+        console.error('Error parsing Telegram auth message:', e);
+      }
+    };
+    
+    window.addEventListener('message', handleMessage);
+    
+    // Проверяем закрытие popup
+    const checkPopup = setInterval(() => {
+      if (popup && popup.closed) {
+        clearInterval(checkPopup);
+        window.removeEventListener('message', handleMessage);
+        setIsLoading(false);
+      }
+    }, 500);
+    
+    // Таймаут на случай, если popup был заблокирован
+    if (!popup || popup.closed) {
+      setError('Не удалось открыть окно авторизации. Разрешите всплывающие окна.');
+      setIsLoading(false);
+    }
   };
 
   const handleClose = () => {
@@ -240,11 +307,21 @@ function AuthModal({ isOpen, onClose, onSuccess }) {
           <span className="divider-line"></span>
         </div>
 
-        <button className="btn-telegram mono" onClick={handleTelegramLogin}>
-          <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-            <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-          </svg>
-          {isRegisterMode ? 'Регистрация через Telegram' : 'Войти через Telegram'}
+        <button 
+          className="btn-telegram mono" 
+          onClick={handleTelegramLogin}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <span>loading...</span>
+          ) : (
+            <>
+              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+              </svg>
+              {isRegisterMode ? 'Регистрация через Telegram' : 'Войти через Telegram'}
+            </>
+          )}
         </button>
       </div>
     </div>

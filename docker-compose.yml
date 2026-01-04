@@ -1,4 +1,23 @@
 services:
+  frontend:
+    build: .
+    container_name: frontend-app
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      # gRPC Configuration
+      - VITE_GRPC_SERVER_URL=http://localhost:8080
+      - VITE_GRPC_DIRECT_URL=http://localhost:44044
+      # Telegram Auth
+      - VITE_TELEGRAM_AUTH_URL=https://b2a12756fe57bb.lhr.life
+    restart: unless-stopped
+    networks:
+      - grpc-network
+
   envoy:
     image: envoyproxy/envoy:v1.24.0
     container_name: grpc-envoy-proxy
