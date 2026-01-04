@@ -24,8 +24,8 @@ function DashboardHeader({ user }) {
       <div className="header-left">
         <div className="header-breadcrumb mono">
           <span className="breadcrumb-comment">makhkets.t.me</span> 
-          {/* {pageInfo.comment} */}
-          <span>{pageInfo.title}</span>
+          {/* <span>{pageInfo.title}</span>
+          <span>{pageInfo.comment}</span> */}
         </div>
       </div>
 

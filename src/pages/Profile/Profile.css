@@ -147,6 +147,25 @@
   border: 1px solid rgba(74, 222, 128, 0.3);
 }
 
+.badge.telegram {
+  background: rgba(0, 136, 204, 0.15);
+  color: #0088cc;
+  border: 1px solid rgba(0, 136, 204, 0.3);
+}
+
+/* Telegram Auth Styles */
+.user-email.telegram-auth {
+  color: #0088cc;
+}
+
+.telegram-icon {
+  margin-right: 0.25rem;
+}
+
+.telegram-auth-value {
+  color: #0088cc;
+}
+
 .user-card-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

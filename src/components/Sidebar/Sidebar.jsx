@@ -2,7 +2,9 @@ import { NavLink } from 'react-router-dom';
 import './Sidebar.css';
 
 function Sidebar({ user, onLogout }) {
+  // Генерируем аватар по умолчанию только если нет photo_url
   const defaultAvatar = 'https://api.dicebear.com/7.x/initials/svg?seed=' + (user?.name || 'User');
+  const avatarUrl = user?.avatar || defaultAvatar;
 
   return (
     <aside className="sidebar">
@@ -42,7 +44,7 @@ function Sidebar({ user, onLogout }) {
         <NavLink to="/dashboard/profile" className={({ isActive }) => `profile-card ${isActive ? 'active' : ''}`}>
           <div className="profile-avatar">
             <img 
-              src={user?.avatar || defaultAvatar} 
+              src={avatarUrl} 
               alt="Avatar" 
               onError={(e) => { e.target.src = defaultAvatar; }}
             />

@@ -496,5 +496,66 @@ proto.auth.UserPromiseClient.prototype.assignRole =
 };
 
 
+/**
+ * @const
+ * @type {!grpc.web.MethodDescriptor<
+ *   !proto.auth.ChangeAvatarRequest,
+ *   !proto.auth.ChangeAvatarResponse>}
+ */
+const methodDescriptor_User_ChangeAvatar = new grpc.web.MethodDescriptor(
+  '/auth.User/ChangeAvatar',
+  grpc.web.MethodType.UNARY,
+  sso_user_pb.ChangeAvatarRequest,
+  sso_user_pb.ChangeAvatarResponse,
+  /**
+   * @param {!proto.auth.ChangeAvatarRequest} request
+   * @return {!Uint8Array}
+   */
+  function(request) {
+    return request.serializeBinary();
+  },
+  sso_user_pb.ChangeAvatarResponse.deserializeBinary
+);
+
+
+/**
+ * @param {!proto.auth.ChangeAvatarRequest} request The
+ *     request proto
+ * @param {?Object<string, string>} metadata User defined
+ *     call metadata
+ * @param {function(?grpc.web.RpcError, ?proto.auth.ChangeAvatarResponse)}
+ *     callback The callback function(error, response)
+ * @return {!grpc.web.ClientReadableStream<!proto.auth.ChangeAvatarResponse>|undefined}
+ *     The XHR Node Readable Stream
+ */
+proto.auth.UserClient.prototype.changeAvatar =
+    function(request, metadata, callback) {
+  return this.client_.rpcCall(this.hostname_ +
+      '/auth.User/ChangeAvatar',
+      request,
+      metadata || {},
+      methodDescriptor_User_ChangeAvatar,
+      callback);
+};
+
+
+/**
+ * @param {!proto.auth.ChangeAvatarRequest} request The
+ *     request proto
+ * @param {?Object<string, string>=} metadata User defined
+ *     call metadata
+ * @return {!Promise<!proto.auth.ChangeAvatarResponse>}
+ *     Promise that resolves to the response
+ */
+proto.auth.UserPromiseClient.prototype.changeAvatar =
+    function(request, metadata) {
+  return this.client_.unaryCall(this.hostname_ +
+      '/auth.User/ChangeAvatar',
+      request,
+      metadata || {},
+      methodDescriptor_User_ChangeAvatar);
+};
+
+
 module.exports = proto.auth;
 

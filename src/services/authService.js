@@ -477,6 +477,61 @@ class AuthService {
   }
 
   /**
+   * Получение данных пользователя из access токена
+   * @returns {Object|null} - Объект с данными пользователя или null
+   */
+  getUserFromToken() {
+    const payload = this.getTokenPayload();
+    if (!payload) return null;
+    
+    // Проверяем авторизован ли через Telegram (email пустой)
+    const isTelegramAuth = !payload.email || payload.email === '';
+    
+    return {
+      id: payload.sub || payload.uid || payload.user_id || null,
+      appId: payload.app_id || null,
+      name: payload.username || 'User',
+      email: payload.email || null,
+      // Если photo_url есть - используем его, иначе null (аватар будет генерироваться)
+      avatar: payload.photo_url || null,
+      balance: payload.balance || 0,
+      role: payload.role || 0,
+      isTelegramAuth: isTelegramAuth,
+      exp: payload.exp || null
+    };
+  }
+
+  /**
+   * Проверка валидности токенов и возврат данных пользователя
+   * @returns {Promise<Object|null>} - Данные пользователя или null если не авторизован
+   */
+  async validateAndGetUser() {
+    const accessToken = this.getAccessToken();
+    const refreshToken = this.getRefreshToken();
+    
+    // Если нет токенов - не авторизован
+    if (!accessToken || !refreshToken) {
+      this.clearTokens();
+      return null;
+    }
+    
+    // Проверяем не истёк ли access токен
+    if (isTokenExpired(accessToken)) {
+      // Пробуем обновить токен
+      try {
+        await this.refreshToken();
+      } catch (error) {
+        console.error('Failed to refresh token on validation:', error);
+        this.clearTokens();
+        return null;
+      }
+    }
+    
+    // Возвращаем данные пользователя
+    return this.getUserFromToken();
+  }
+
+  /**
    * Проверка истёк ли текущий access токен
    * @returns {boolean} - true если токен истёк или отсутствует
    */

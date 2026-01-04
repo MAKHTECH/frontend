@@ -1,7 +1,13 @@
 import './Profile.css';
 
 function Profile({ user }) {
+  // Генерируем аватар по умолчанию только если нет photo_url
   const defaultAvatar = 'https://api.dicebear.com/7.x/initials/svg?seed=' + (user?.name || 'User');
+  const avatarUrl = user?.avatar || defaultAvatar;
+
+  // Определяем что показывать в поле email
+  const emailDisplay = user?.email || 'Logged in via Telegram';
+  const isTelegramAuth = user?.isTelegramAuth || !user?.email;
 
   return (
     <div className="page-profile">
@@ -22,7 +28,7 @@ function Profile({ user }) {
           <div className="user-card-header">
             <div className="user-avatar">
               <img 
-                src={user?.avatar || defaultAvatar} 
+                src={avatarUrl} 
                 alt="Avatar" 
                 onError={(e) => { e.target.src = defaultAvatar; }}
               />
@@ -30,8 +36,12 @@ function Profile({ user }) {
             </div>
             <div className="user-info">
               <h2 className="user-name">{user?.name || 'User'}</h2>
-              <span className="user-email mono">{user?.email || 'user@orbita.dev'}</span>
+              <span className={`user-email mono ${isTelegramAuth ? 'telegram-auth' : ''}`}>
+                {isTelegramAuth && <span className="telegram-icon">✈️ </span>}
+                {emailDisplay}
+              </span>
               <div className="user-badges">
+                {isTelegramAuth && <span className="badge telegram">Telegram</span>}
                 <span className="badge verified">✓ verified</span>
               </div>
             </div>
@@ -71,12 +81,14 @@ function Profile({ user }) {
                   <button className="btn-action mono">edit()</button>
                 </div>
                 <div className="info-item">
-                  <div className="info-icon">📧</div>
+                  <div className="info-icon">{isTelegramAuth ? '✈️' : '📧'}</div>
                   <div className="info-content">
-                    <span className="info-label mono">email:</span>
-                    <span className="info-value mono">"{user?.email || 'user@orbita.dev'}"</span>
+                    <span className="info-label mono">{isTelegramAuth ? 'auth:' : 'email:'}</span>
+                    <span className={`info-value mono ${isTelegramAuth ? 'telegram-auth-value' : ''}`}>
+                      "{isTelegramAuth ? 'via Telegram' : user?.email}"
+                    </span>
                   </div>
-                  <button className="btn-action mono">edit()</button>
+                  {!isTelegramAuth && <button className="btn-action mono">edit()</button>}
                 </div>
                 <div className="info-item">
                   <div className="info-icon">🔐</div>

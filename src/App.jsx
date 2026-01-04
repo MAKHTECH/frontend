@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/Header/Header';
 import Hero from './components/Hero/Hero';
@@ -11,32 +11,66 @@ import Dashboard from './components/Dashboard/Dashboard';
 import Servers from './pages/Servers/Servers';
 import MyServers from './pages/MyServers/MyServers';
 import Profile from './pages/Profile/Profile';
+import authService from './services/authService';
 import './App.css';
 
 function App() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Проверяем токены при загрузке приложения
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const userData = await authService.validateAndGetUser();
+        if (userData) {
+          setUser(userData);
+          setIsLoggedIn(true);
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
 
   const openAuth = () => setIsAuthOpen(true);
   const closeAuth = () => setIsAuthOpen(false);
 
   const handleLoginSuccess = () => {
-    setIsLoggedIn(true);
-    setIsAuthOpen(false);
-    // Моковые данные пользователя
-    setUser({
-      name: 'Admin',
-      email: 'admin@orbita.dev',
-      avatar: null,
-      balance: 0.00
-    });
+    // Получаем данные пользователя из токена
+    const userData = authService.getUserFromToken();
+    if (userData) {
+      setUser(userData);
+      setIsLoggedIn(true);
+      setIsAuthOpen(false);
+    }
   };
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setUser(null);
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setIsLoggedIn(false);
+      setUser(null);
+    }
   };
+
+  // Показываем загрузку пока проверяем токены
+  if (isLoading) {
+    return (
+      <div className="app-loading">
+        <div className="loading-spinner"></div>
+      </div>
+    );
+  }
 
   return (
     <BrowserRouter>
