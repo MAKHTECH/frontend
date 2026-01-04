@@ -483,22 +483,23 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(10, 10, 15, 0.9);
+  background: rgba(0, 0, 0, 0.85);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(8px);
 }
 
 .edit-modal {
-  background: var(--background-dark, #0a0a0f);
-  border: 1px solid rgba(255, 0, 255, 0.3);
+  background: #0d0d12;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
   padding: 2rem;
   min-width: 400px;
   max-width: 90vw;
   position: relative;
-  box-shadow: 0 0 40px rgba(255, 0, 255, 0.2);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
 .modal-close {

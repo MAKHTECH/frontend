@@ -389,8 +389,8 @@ function Profile({ user, onUserUpdate }) {
 
       {/* Edit Modal */}
       {editModal.isOpen && (
-        <div className="edit-modal-overlay" onClick={closeEditModal}>
-          <div className="edit-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="edit-modal-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) closeEditModal(); }}>
+          <div className="edit-modal" onMouseDown={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={closeEditModal}>×</button>
             <form onSubmit={handleSubmit}>
               {renderModalContent()}

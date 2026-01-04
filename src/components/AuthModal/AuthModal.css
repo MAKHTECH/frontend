@@ -1,8 +1,8 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -11,12 +11,14 @@
 }
 
 .modal-container {
-  background: var(--surface);
-  border: 1px solid rgba(255, 0, 255, 0.2);
+  background: #0d0d12;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
   width: 100%;
   max-width: 400px;
   padding: 2rem;
   position: relative;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
 .modal-close {
@@ -92,12 +94,13 @@
 }
 
 .form-input {
-  background: var(--background);
-  border: 1px solid rgba(255, 0, 255, 0.15);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 0.875rem 1rem;
   font-size: 0.9rem;
   color: var(--text-primary);
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 2px;
 }
 
 .form-input::placeholder {
@@ -107,7 +110,8 @@
 
 .form-input:focus {
   outline: none;
-  border-color: var(--primary);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.05);
 }
 
 /* Error */
@@ -195,7 +199,7 @@
 .divider-line {
   flex: 1;
   height: 1px;
-  background: rgba(255, 0, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .divider-text {
@@ -209,7 +213,8 @@
 .btn-telegram {
   width: 100%;
   background: transparent;
-  border: 1px solid rgba(255, 0, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
   color: var(--text-primary);
   padding: 0.875rem 1rem;
   font-size: 0.85rem;
@@ -224,6 +229,7 @@
 .btn-telegram:hover {
   border-color: #0088cc;
   color: #0088cc;
+  background: rgba(0, 136, 204, 0.05);
 }
 
 .btn-telegram svg {
