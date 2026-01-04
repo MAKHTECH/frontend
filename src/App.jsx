@@ -63,6 +63,10 @@ function App() {
     }
   };
 
+  const handleUserUpdate = (updatedUser) => {
+    setUser(updatedUser);
+  };
+
   // Показываем загрузку пока проверяем токены
   if (isLoading) {
     return (
@@ -114,7 +118,7 @@ function App() {
         >
           <Route index element={<Servers />} />
           <Route path="my-servers" element={<MyServers />} />
-          <Route path="profile" element={<Profile user={user} />} />
+          <Route path="profile" element={<Profile user={user} onUserUpdate={handleUserUpdate} />} />
         </Route>
 
         {/* Fallback */}

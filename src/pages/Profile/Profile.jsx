@@ -1,6 +1,20 @@
+import { useState } from 'react';
+import userService from '../../services/userService';
 import './Profile.css';
 
-function Profile({ user }) {
+function Profile({ user, onUserUpdate }) {
+  const [editModal, setEditModal] = useState({ type: null, isOpen: false });
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+    avatarUrl: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
   // Генерируем аватар по умолчанию только если нет photo_url
   const defaultAvatar = 'https://api.dicebear.com/7.x/initials/svg?seed=' + (user?.name || 'User');
   const avatarUrl = user?.avatar || defaultAvatar;
@@ -8,6 +22,212 @@ function Profile({ user }) {
   // Определяем что показывать в поле email
   const emailDisplay = user?.email || 'Logged in via Telegram';
   const isTelegramAuth = user?.isTelegramAuth || !user?.email;
+
+  const openEditModal = (type) => {
+    setError('');
+    setFormData({
+      username: user?.name || '',
+      email: user?.email || '',
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+      avatarUrl: user?.avatar || ''
+    });
+    setEditModal({ type, isOpen: true });
+  };
+
+  const closeEditModal = () => {
+    setEditModal({ type: null, isOpen: false });
+    setError('');
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const appId = 1; // ID приложения
+
+      switch (editModal.type) {
+        case 'username':
+          if (!formData.username.trim()) {
+            throw new Error('Имя пользователя не может быть пустым');
+          }
+          const usernameResult = await userService.changeUsername(appId, formData.username);
+          if (onUserUpdate) {
+            onUserUpdate({ ...user, name: usernameResult.username });
+          }
+          break;
+
+        case 'email':
+          if (!formData.email.trim() || !formData.email.includes('@')) {
+            throw new Error('Введите корректный email');
+          }
+          const emailResult = await userService.changeEmail(appId, formData.email);
+          if (onUserUpdate) {
+            onUserUpdate({ ...user, email: emailResult.email });
+          }
+          break;
+
+        case 'password':
+          if (!formData.currentPassword) {
+            throw new Error('Введите текущий пароль');
+          }
+          if (!formData.newPassword || formData.newPassword.length < 6) {
+            throw new Error('Новый пароль должен быть не менее 6 символов');
+          }
+          if (formData.newPassword !== formData.confirmPassword) {
+            throw new Error('Пароли не совпадают');
+          }
+          await userService.changePassword(appId, formData.currentPassword, formData.newPassword);
+          break;
+
+        case 'avatar':
+          // Проверяем, является ли введённое значение валидной ссылкой
+          const urlPattern = /^https?:\/\/.+/i;
+          const avatarValue = formData.avatarUrl.trim();
+          
+          // Если пустое или не ссылка - используем дефолтный аватар по инициалам
+          const finalAvatarUrl = (avatarValue && urlPattern.test(avatarValue)) 
+            ? avatarValue 
+            : `https://api.dicebear.com/7.x/initials/svg?seed=${user?.name || 'User'}`;
+          
+          await userService.changeAvatar(appId, finalAvatarUrl);
+          if (onUserUpdate) {
+            onUserUpdate({ ...user, avatar: finalAvatarUrl });
+          }
+          break;
+
+        default:
+          break;
+      }
+
+      closeEditModal();
+    } catch (err) {
+      setError(err.message || 'Произошла ошибка');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderModalContent = () => {
+    switch (editModal.type) {
+      case 'username':
+        return (
+          <>
+            <h3 className="modal-title mono">// Изменить имя пользователя</h3>
+            <div className="form-group">
+              <label className="form-label mono">new_username:</label>
+              <input
+                type="text"
+                name="username"
+                value={formData.username}
+                onChange={handleInputChange}
+                className="form-input mono"
+                placeholder="Введите новое имя"
+                autoFocus
+              />
+            </div>
+          </>
+        );
+
+      case 'email':
+        return (
+          <>
+            <h3 className="modal-title mono">// Изменить email</h3>
+            <div className="form-group">
+              <label className="form-label mono">new_email:</label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                className="form-input mono"
+                placeholder="Введите новый email"
+                autoFocus
+              />
+            </div>
+          </>
+        );
+
+      case 'password':
+        return (
+          <>
+            <h3 className="modal-title mono">// Изменить пароль</h3>
+            <div className="form-group">
+              <label className="form-label mono">current_password:</label>
+              <input
+                type="password"
+                name="currentPassword"
+                value={formData.currentPassword}
+                onChange={handleInputChange}
+                className="form-input mono"
+                placeholder="Текущий пароль"
+                autoFocus
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label mono">new_password:</label>
+              <input
+                type="password"
+                name="newPassword"
+                value={formData.newPassword}
+                onChange={handleInputChange}
+                className="form-input mono"
+                placeholder="Новый пароль"
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label mono">confirm_password:</label>
+              <input
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+                className="form-input mono"
+                placeholder="Подтвердите пароль"
+              />
+            </div>
+          </>
+        );
+
+      case 'avatar':
+        return (
+          <>
+            <h3 className="modal-title mono">// Изменить аватар</h3>
+            <div className="avatar-preview">
+              <img 
+                src={formData.avatarUrl || defaultAvatar} 
+                alt="Preview" 
+                onError={(e) => { e.target.src = defaultAvatar; }}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label mono">photo_url:</label>
+              <input
+                type="url"
+                name="avatarUrl"
+                value={formData.avatarUrl}
+                onChange={handleInputChange}
+                className="form-input mono"
+                placeholder="https://example.com/avatar.jpg"
+                autoFocus
+              />
+            </div>
+            <p className="form-hint mono">// Вставьте прямую ссылку на изображение</p>
+          </>
+        );
+
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="page-profile">
@@ -32,7 +252,7 @@ function Profile({ user }) {
                 alt="Avatar" 
                 onError={(e) => { e.target.src = defaultAvatar; }}
               />
-              <button className="btn-avatar-edit">📷</button>
+              <button className="btn-avatar-edit" onClick={() => openEditModal('avatar')}>📷</button>
             </div>
             <div className="user-info">
               <h2 className="user-name">{user?.name || 'User'}</h2>
@@ -56,8 +276,8 @@ function Profile({ user }) {
               <span className="stat-label">servers</span>
             </div>
             <div className="user-stat">
-              <span className="stat-value">2024</span>
-              <span className="stat-label">member since</span>
+              <span className="stat-value">{user?.id || 'N/A'}</span>
+              <span className="stat-label">user id</span>
             </div>
           </div>
         </div>
@@ -78,7 +298,7 @@ function Profile({ user }) {
                     <span className="info-label mono">username:</span>
                     <span className="info-value mono">"{user?.name || 'User'}"</span>
                   </div>
-                  <button className="btn-action mono">edit()</button>
+                  <button className="btn-action mono" onClick={() => openEditModal('username')}>edit()</button>
                 </div>
                 <div className="info-item">
                   <div className="info-icon">{isTelegramAuth ? '✈️' : '📧'}</div>
@@ -88,7 +308,7 @@ function Profile({ user }) {
                       "{isTelegramAuth ? 'via Telegram' : user?.email}"
                     </span>
                   </div>
-                  {!isTelegramAuth && <button className="btn-action mono">edit()</button>}
+                  {!isTelegramAuth && <button className="btn-action mono" onClick={() => openEditModal('email')}>edit()</button>}
                 </div>
                 <div className="info-item">
                   <div className="info-icon">🔐</div>
@@ -96,7 +316,7 @@ function Profile({ user }) {
                     <span className="info-label mono">password:</span>
                     <span className="info-value mono">"••••••••"</span>
                   </div>
-                  <button className="btn-action mono">change()</button>
+                  <button className="btn-action mono" onClick={() => openEditModal('password')}>change()</button>
                 </div>
               </div>
             </div>
@@ -166,6 +386,36 @@ function Profile({ user }) {
           </div>
         </div>
       </div>
+
+      {/* Edit Modal */}
+      {editModal.isOpen && (
+        <div className="edit-modal-overlay" onClick={closeEditModal}>
+          <div className="edit-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={closeEditModal}>×</button>
+            <form onSubmit={handleSubmit}>
+              {renderModalContent()}
+              {error && <div className="form-error mono">{error}</div>}
+              <div className="modal-actions">
+                <button 
+                  type="submit" 
+                  className="btn-submit mono"
+                  disabled={loading}
+                >
+                  {loading ? 'loading...' : 'save()'}
+                </button>
+                <button 
+                  type="button" 
+                  className="btn-cancel mono" 
+                  onClick={closeEditModal}
+                  disabled={loading}
+                >
+                  cancel()
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

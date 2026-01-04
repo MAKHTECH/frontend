@@ -557,5 +557,188 @@ proto.auth.UserPromiseClient.prototype.changeAvatar =
 };
 
 
+/**
+ * @const
+ * @type {!grpc.web.MethodDescriptor<
+ *   !proto.auth.ChangeUsernameRequest,
+ *   !proto.auth.ChangeUsernameResponse>}
+ */
+const methodDescriptor_User_ChangeUsername = new grpc.web.MethodDescriptor(
+  '/auth.User/ChangeUsername',
+  grpc.web.MethodType.UNARY,
+  sso_user_pb.ChangeUsernameRequest,
+  sso_user_pb.ChangeUsernameResponse,
+  /**
+   * @param {!proto.auth.ChangeUsernameRequest} request
+   * @return {!Uint8Array}
+   */
+  function(request) {
+    return request.serializeBinary();
+  },
+  sso_user_pb.ChangeUsernameResponse.deserializeBinary
+);
+
+
+/**
+ * @param {!proto.auth.ChangeUsernameRequest} request The
+ *     request proto
+ * @param {?Object<string, string>} metadata User defined
+ *     call metadata
+ * @param {function(?grpc.web.RpcError, ?proto.auth.ChangeUsernameResponse)}
+ *     callback The callback function(error, response)
+ * @return {!grpc.web.ClientReadableStream<!proto.auth.ChangeUsernameResponse>|undefined}
+ *     The XHR Node Readable Stream
+ */
+proto.auth.UserClient.prototype.changeUsername =
+    function(request, metadata, callback) {
+  return this.client_.rpcCall(this.hostname_ +
+      '/auth.User/ChangeUsername',
+      request,
+      metadata || {},
+      methodDescriptor_User_ChangeUsername,
+      callback);
+};
+
+
+/**
+ * @param {!proto.auth.ChangeUsernameRequest} request The
+ *     request proto
+ * @param {?Object<string, string>=} metadata User defined
+ *     call metadata
+ * @return {!Promise<!proto.auth.ChangeUsernameResponse>}
+ *     Promise that resolves to the response
+ */
+proto.auth.UserPromiseClient.prototype.changeUsername =
+    function(request, metadata) {
+  return this.client_.unaryCall(this.hostname_ +
+      '/auth.User/ChangeUsername',
+      request,
+      metadata || {},
+      methodDescriptor_User_ChangeUsername);
+};
+
+
+/**
+ * @const
+ * @type {!grpc.web.MethodDescriptor<
+ *   !proto.auth.ChangePasswordRequest,
+ *   !proto.auth.ChangePasswordResponse>}
+ */
+const methodDescriptor_User_ChangePassword = new grpc.web.MethodDescriptor(
+  '/auth.User/ChangePassword',
+  grpc.web.MethodType.UNARY,
+  sso_user_pb.ChangePasswordRequest,
+  sso_user_pb.ChangePasswordResponse,
+  /**
+   * @param {!proto.auth.ChangePasswordRequest} request
+   * @return {!Uint8Array}
+   */
+  function(request) {
+    return request.serializeBinary();
+  },
+  sso_user_pb.ChangePasswordResponse.deserializeBinary
+);
+
+
+/**
+ * @param {!proto.auth.ChangePasswordRequest} request The
+ *     request proto
+ * @param {?Object<string, string>} metadata User defined
+ *     call metadata
+ * @param {function(?grpc.web.RpcError, ?proto.auth.ChangePasswordResponse)}
+ *     callback The callback function(error, response)
+ * @return {!grpc.web.ClientReadableStream<!proto.auth.ChangePasswordResponse>|undefined}
+ *     The XHR Node Readable Stream
+ */
+proto.auth.UserClient.prototype.changePassword =
+    function(request, metadata, callback) {
+  return this.client_.rpcCall(this.hostname_ +
+      '/auth.User/ChangePassword',
+      request,
+      metadata || {},
+      methodDescriptor_User_ChangePassword,
+      callback);
+};
+
+
+/**
+ * @param {!proto.auth.ChangePasswordRequest} request The
+ *     request proto
+ * @param {?Object<string, string>=} metadata User defined
+ *     call metadata
+ * @return {!Promise<!proto.auth.ChangePasswordResponse>}
+ *     Promise that resolves to the response
+ */
+proto.auth.UserPromiseClient.prototype.changePassword =
+    function(request, metadata) {
+  return this.client_.unaryCall(this.hostname_ +
+      '/auth.User/ChangePassword',
+      request,
+      metadata || {},
+      methodDescriptor_User_ChangePassword);
+};
+
+
+/**
+ * @const
+ * @type {!grpc.web.MethodDescriptor<
+ *   !proto.auth.ChangeEmailRequest,
+ *   !proto.auth.ChangeEmailResponse>}
+ */
+const methodDescriptor_User_ChangeEmail = new grpc.web.MethodDescriptor(
+  '/auth.User/ChangeEmail',
+  grpc.web.MethodType.UNARY,
+  sso_user_pb.ChangeEmailRequest,
+  sso_user_pb.ChangeEmailResponse,
+  /**
+   * @param {!proto.auth.ChangeEmailRequest} request
+   * @return {!Uint8Array}
+   */
+  function(request) {
+    return request.serializeBinary();
+  },
+  sso_user_pb.ChangeEmailResponse.deserializeBinary
+);
+
+
+/**
+ * @param {!proto.auth.ChangeEmailRequest} request The
+ *     request proto
+ * @param {?Object<string, string>} metadata User defined
+ *     call metadata
+ * @param {function(?grpc.web.RpcError, ?proto.auth.ChangeEmailResponse)}
+ *     callback The callback function(error, response)
+ * @return {!grpc.web.ClientReadableStream<!proto.auth.ChangeEmailResponse>|undefined}
+ *     The XHR Node Readable Stream
+ */
+proto.auth.UserClient.prototype.changeEmail =
+    function(request, metadata, callback) {
+  return this.client_.rpcCall(this.hostname_ +
+      '/auth.User/ChangeEmail',
+      request,
+      metadata || {},
+      methodDescriptor_User_ChangeEmail,
+      callback);
+};
+
+
+/**
+ * @param {!proto.auth.ChangeEmailRequest} request The
+ *     request proto
+ * @param {?Object<string, string>=} metadata User defined
+ *     call metadata
+ * @return {!Promise<!proto.auth.ChangeEmailResponse>}
+ *     Promise that resolves to the response
+ */
+proto.auth.UserPromiseClient.prototype.changeEmail =
+    function(request, metadata) {
+  return this.client_.unaryCall(this.hostname_ +
+      '/auth.User/ChangeEmail',
+      request,
+      metadata || {},
+      methodDescriptor_User_ChangeEmail);
+};
+
+
 module.exports = proto.auth;
 
