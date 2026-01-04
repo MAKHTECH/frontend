@@ -84,15 +84,12 @@ function AuthModal({ isOpen, onClose, onSuccess }) {
     setError('');
     setIsLoading(true);
     
-    // Telegram Bot username и callback URL
-    const botUsername = 'ENStealer_bot';
-    const callbackUrl = 'http://localhost:8099/callback/telegram/auth';
+    // Telegram Bot ID
+    const botId = '6140124734';
     
-    // Генерируем уникальный ID для этой сессии авторизации
-    const authId = Date.now().toString();
-    
-    // Создаём URL для Telegram OAuth
-    const telegramAuthUrl = `https://oauth.telegram.org/auth?bot_id=6140124734&origin=${encodeURIComponent(window.location.origin)}&request_access=write&return_to=${encodeURIComponent(window.location.href)}`;
+    // Origin должен точно соответствовать домену, зарегистрированному для бота
+    // В продакшене это https://orbita.makhkets.ru
+    const origin = window.location.origin;
     
     // Открываем popup для авторизации Telegram
     const width = 550;
@@ -100,32 +97,57 @@ function AuthModal({ isOpen, onClose, onSuccess }) {
     const left = (window.screen.width - width) / 2;
     const top = (window.screen.height - height) / 2;
     
+    // Формируем URL для Telegram OAuth
+    // Важно: origin должен быть без trailing slash и точно соответствовать домену бота
+    const authUrl = `https://oauth.telegram.org/auth?bot_id=${botId}&origin=${encodeURIComponent(origin)}&embed=1&request_access=write`;
+    
     const popup = window.open(
-      `https://oauth.telegram.org/auth?bot_id=6140124734&origin=${encodeURIComponent(window.location.origin)}&embed=1&request_access=write`,
+      authUrl,
       'telegram-auth',
-      `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no`
+      `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=no,resizable=no`
     );
     
     // Слушаем сообщения от Telegram
     const handleMessage = async (event) => {
-      // Проверяем origin
+      // Проверяем origin - принимаем сообщения только от Telegram
       if (event.origin !== 'https://oauth.telegram.org') return;
       
       try {
-        const data = JSON.parse(event.data);
+        let data;
         
-        if (data.event === 'auth_result' && data.result) {
+        // Telegram может отправить данные как строку JSON или как объект
+        if (typeof event.data === 'string') {
+          data = JSON.parse(event.data);
+        } else {
+          data = event.data;
+        }
+        
+        // Проверяем результат авторизации
+        if (data.event === 'auth_result') {
           window.removeEventListener('message', handleMessage);
-          if (popup && !popup.closed) popup.close();
           
-          // Отправляем данные на бэкенд
-          const telegramData = data.result;
-          const response = await authService.loginWithTelegram(telegramData);
+          if (popup && !popup.closed) {
+            popup.close();
+          }
           
-          if (response.success && response.tokens) {
-            onSuccess({ tokens: response.tokens });
+          if (data.result) {
+            // Успешная авторизация - отправляем данные на бэкенд
+            try {
+              const telegramData = data.result;
+              const response = await authService.loginWithTelegram(telegramData);
+              
+              if (response.success && response.tokens) {
+                onSuccess({ tokens: response.tokens });
+              } else {
+                setError('Ошибка авторизации через Telegram');
+              }
+            } catch (authError) {
+              console.error('Telegram auth backend error:', authError);
+              setError('Ошибка при отправке данных на сервер');
+            }
           } else {
-            setError('Ошибка авторизации через Telegram');
+            // Пользователь отменил авторизацию
+            setError('Авторизация отменена');
           }
           setIsLoading(false);
         }
@@ -149,6 +171,7 @@ function AuthModal({ isOpen, onClose, onSuccess }) {
     if (!popup || popup.closed) {
       setError('Не удалось открыть окно авторизации. Разрешите всплывающие окна.');
       setIsLoading(false);
+      window.removeEventListener('message', handleMessage);
     }
   };
 
